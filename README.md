@@ -1,7 +1,3 @@
-Here’s the full README file expanded in the requested format:
-
----
-
 # Webapp
 
 ## Overview

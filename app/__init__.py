@@ -21,7 +21,7 @@ def create_database():
         existing_databases = connection.execute(text("SHOW DATABASES;"))
         if db_name not in [row[0] for row in existing_databases]:
             connection.execute(text(f"CREATE DATABASE {db_name};"))
-            print(f"✅ Database '{db_name}' created successfully!")
+            print(f"Database '{db_name}' created successfully!")
 
 def create_app():
     app = Flask(__name__)

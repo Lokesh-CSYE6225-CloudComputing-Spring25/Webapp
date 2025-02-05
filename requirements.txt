@@ -3,3 +3,4 @@ flask
 flask-sqlalchemy
 mysqlclient
 mysql-connector-python
+python-dotenv

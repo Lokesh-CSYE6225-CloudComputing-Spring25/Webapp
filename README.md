@@ -1,5 +1,50 @@
 # Webapp
 
+This repository contains all assignments related to the CSYE 6225 course.
+
+---
+
+## 📌 Table of Contents
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Assignment 1](#assignment-1)
+- [Assignment 2](#assignment-2)
+- [Prerequisites](#prerequisites)
+- [How to Run the Application](#how-to-run-the-application)
+- [Deployment on Ubuntu Droplet](#deployment-on-ubuntu-droplet)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## **Project Overview**
+This is a Flask-based web application that performs system health checks, interacts with a MySQL database, and supports automated deployment via shell scripts.
+
+---
+
+## **Features**
+- Modular Flask application using Blueprints.
+- `/healthz` endpoint for health checks.
+- SQLAlchemy ORM integration with automatic database setup.
+- Secure credential handling using `.env` files.
+- Automated deployment using a shell script.
+- Systemd configuration for persistent application execution.
+
+---
+
+## **Assignment 1**
+### 📝 Overview
+This assignment involved setting up a Flask web application with a `/healthz` endpoint, integrating MySQL, and implementing CI/CD.
+
+### 📚 Steps Completed
+✅ Flask application setup  
+✅ `/healthz` endpoint implemented  
+✅ MySQL database setup  
+✅ API tests written using `pytest`
+
+---
+How to Run the Application
 ## Overview
 This is a Flask-based web application with a simple `/healthz` endpoint to perform health checks and interact with a MySQL database. It uses SQLAlchemy for ORM and provides a scalable, modular structure.
 
@@ -136,5 +181,169 @@ You can test the `/healthz` endpoint with tools like `curl` or Postman:
 ## Notes
 - Ensure `.env` is added to `.gitignore` to secure sensitive credentials.
 - Default credentials in `config.py` can be overridden by environment variables.
+
+
+
+
+
+---
+
+
+## **Assignment 2**
+### 📝 Overview
+Assignment 2 expands on Assignment 1 by implementing automation with a shell script and deploying to a cloud-based Ubuntu droplet.
+
+### 📚 Steps Completed
+✅ Created an automation script (`setup_script.sh`)  
+✅ Set up and tested API routes  
+✅ Implemented API testing using `pytest`  
+✅ Deployed application on DigitalOcean  
+✅ Fixed `datetime.utcnow()` deprecation issues  
+✅ Configured `systemd` service to keep the app running  
+✅ Allowed external access via UFW firewall rules  
+
+---
+
+## **Prerequisites**
+- Python 3.7 or higher
+- MySQL database
+- Pip for managing Python packages
+- SSH access to an Ubuntu server (for deployment)
+
+---
+
+## **How to Run the Application**
+### 🚀 Steps to Start Locally
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd Webapp_Remote
+   ```
+2. Create a virtual environment and install dependencies:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. Create a `.env` file in the project root:
+   ```bash
+   touch .env
+   ```
+   Add your database credentials:
+   ```
+   DB_USER=your_username
+   DB_PASSWORD=your_password
+   ```
+4. Run the Flask application:
+   ```bash
+   python run.py
+   ```
+5. Test the API:
+   ```bash
+   curl -i http://127.0.0.1:8080/healthz
+   ```
+
+---
+
+## **Deployment on Ubuntu Droplet**
+1. Connect to the server via SSH:
+   ```bash
+   ssh -i ~/.ssh/do root@<droplet-ip>
+   ```
+2. Copy the zipped web application and shell script using SCP:
+   ```bash
+   scp -i ~/.ssh/do Webapp.zip setup_script.sh root@<droplet-ip>:/root/
+   ```
+3. Run the shell script to set up the application:
+   ```bash
+   sudo bash setup_script.sh
+   ```
+4. Verify that MySQL is running:
+   ```bash
+   systemctl status mysql
+   ```
+5. Verify that Python is installed and running:
+   ```bash
+   python --version
+   ```
+6. Navigate to the application directory:
+   ```bash
+   cd /opt/csye6225/
+   ```
+7. Create a virtual environment and `.env` file (if pulled from GitHub):
+   ```bash
+   python3 -m venv venv
+   touch .env
+   ```
+8. Activate the virtual environment:
+   ```bash
+   source venv/bin/activate
+   ```
+9. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+10. Start the Flask application:
+    ```bash
+    python run.py
+    ```
+11. Stop the app and run tests:
+    ```bash
+    pkill -f run.py  # Stops the running Flask application
+    pytest tests/
+    ```
+12. Allow external access to port 8080:
+    ```bash
+    sudo ufw allow 8080/tcp
+    ```
+13. Test the API from your local machine:
+    ```bash
+    curl -i http://<droplet-ip>:8080/healthz
+    ```
+
+---
+
+## **API Endpoints**
+### **GET /healthz**
+- **Description**: Performs a health check by interacting with the database.
+- **Response**:
+  - `200 OK`: Database is healthy.
+  - `503 Service Unavailable`: Database connection failed.
+- **Headers**:
+  - `Cache-Control`: `no-cache, no-store, must-revalidate`
+  - `X-Content-Type-Options`: `nosniff`
+
+---
+
+## **Testing**
+You can test the `/healthz` endpoint using `curl` or Postman:
+1. Using `curl`:
+   ```bash
+   curl -X GET http://127.0.0.1:8080/healthz
+   ```
+2. Using Postman:
+   - Set method to `GET`.
+   - Enter the URL: `http://127.0.0.1:8080/healthz`.
+   - Send the request and check the response.
+
+---
+
+## **Troubleshooting**
+### Database Connection Issues
+- Verify credentials in `.env`.
+- Ensure the MySQL service is running and accessible.
+- Check the database URL in `config.py`.
+
+### Missing Dependencies
+- Ensure all dependencies are installed:
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+### Debugging
+- Enable Flask debug mode during development:
+  ```python
+  app.run(debug=True)
+  ```
 
 ---

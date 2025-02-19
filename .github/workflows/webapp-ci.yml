@@ -16,6 +16,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      
+    - name: Check Secrets Availability
+      run: |
+        echo "DB_HOST: $DB_HOST"
+        echo "DB_NAME: $DB_NAME"
+        echo "DB_USER: $DB_USER"
+        echo "DB_PASS: [HIDDEN]"
 
     - name: Start MySQL and Configure Root Password
       run: |

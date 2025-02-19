@@ -2,7 +2,7 @@
 from flask import Flask, make_response
 from .routes import healthz
 from .models import db
-from datetime import datetime
+from datetime import datetime, timezone
 from app.config import Config
 from sqlalchemy import create_engine, text
 
@@ -10,18 +10,19 @@ def add_common_headers(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Date"] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+    response.headers["Date"] = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
     return response
 
+
 def create_database():
-    """ Automatically creates the database if it doesn't exist. """
-    engine = create_engine(Config.SQLALCHEMY_DATABASE_URI.rsplit("/", 1)[0])  # Connect without DB name
+    """ Ensure the database exists before creating tables. """
+    engine = create_engine(f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASS}@{Config.DB_HOST}/")
     with engine.connect() as connection:
-        db_name = Config.SQLALCHEMY_DATABASE_URI.rsplit("/", 1)[1]  # Extract DB name
         existing_databases = connection.execute(text("SHOW DATABASES;"))
-        if db_name not in [row[0] for row in existing_databases]:
-            connection.execute(text(f"CREATE DATABASE {db_name};"))
-            print(f"Database '{db_name}' created successfully!")
+        db_names = [row[0] for row in existing_databases]
+
+        if Config.DB_NAME not in db_names:
+            connection.execute(text(f"CREATE DATABASE {Config.DB_NAME};"))
 
 def create_app():
     app = Flask(__name__)

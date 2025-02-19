@@ -1,17 +1,30 @@
 #!/bin/bash
 
-# Variables (Modify as needed)
-DB_TYPE="mysql"   # Change to "postgresql" or "mariadb" if needed
-DB_NAME="healthcheck"
-DB_USER="root"
-DB_PASS="loki2001"  # Set root password for MySQL
-APP_DIR="/opt/csye6225"
-
 # Ensure script runs as root
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root (use sudo)" 
    exit 1
 fi
+
+# Load environment variables from .env file
+ENV_FILE="/root/.env"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+    echo "Error: .env file not found at $ENV_FILE"
+    exit 1
+fi
+
+export $(grep -v '^#' "$ENV_FILE" | xargs)
+
+# Ensure required variables are set
+if [[ -z "$DB_USER" || -z "$DB_PASS" || -z "$DB_HOST" || -z "$DB_NAME" || -z "$APP_USER" || -z "$APP_GROUP" || -z "$APP_DIR" ]]; then
+    echo "Error: One or more required environment variables are missing in .env file."
+    exit 1
+fi
+
+echo "Using Database: $DB_NAME on Host: $DB_HOST with User: $DB_USER"
+echo "Application Directory: $APP_DIR"
+echo "Running as Application User: $APP_USER"
 
 # Function to check if a package is installed
 check_package() {
@@ -29,8 +42,8 @@ apt update -y && apt upgrade -y
 
 # Install required packages
 echo "Installing required packages..."
-export DEBIAN_FRONTEND=noninteractive  # Suppress password prompt
-apt install -y mysql-server python3 python3-pip python3-venv unzip pkg-config libmysqlclient-dev
+export DEBIAN_FRONTEND=noninteractive
+apt install -y mysql-server python3 python3-pip python3-venv unzip pkg-config libmysqlclient-dev || { echo "Package installation failed"; exit 1; }
 
 # Check if installations were successful
 check_package "mysql"
@@ -41,41 +54,96 @@ check_package "unzip"
 # Start and enable MySQL
 systemctl enable mysql && systemctl start mysql
 
-# Secure MySQL root user and allow password authentication
-echo "Configuring MySQL root user..."
-mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';"
-mysql -u root -e "FLUSH PRIVILEGES;"
+# **FIX: Change MySQL Root Authentication from auth_socket to mysql_native_password**
+echo "Changing MySQL root authentication method..."
+sudo mysql --user=root <<EOF
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
+FLUSH PRIVILEGES;
+EOF
+
+# Verify root login with password
+if ! mysql -u root -p"$DB_PASS" -e "SELECT 1;" &> /dev/null; then
+    echo "Error: MySQL root password setup failed."
+    exit 1
+fi
+
+echo "MySQL root password has been successfully set."
+
+# Create the database user (Non-root user for security)
+echo "Creating new database user: $DB_USER..."
+sudo mysql -u root -p"$DB_PASS" -e "
+CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';
+GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'%';
+FLUSH PRIVILEGES;" || { echo "Failed to create database user"; exit 1; }
 
 # Create the database
 echo "Creating database: $DB_NAME..."
-mysql -u root -p"$DB_PASS" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
+sudo mysql -u root -p"$DB_PASS" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;" || { echo "Failed to create database"; exit 1; }
 
-# Setup application directory (running as root)
+# Create group if it doesn't exist
+if ! getent group "$APP_GROUP" >/dev/null; then
+    echo "Creating group: $APP_GROUP"
+    groupadd --system "$APP_GROUP"
+fi
+
+# Create user if it doesn't exist
+if ! id "$APP_USER" >/dev/null 2>&1; then
+    echo "Creating user: $APP_USER"
+    useradd --system --gid "$APP_GROUP" --home "$APP_DIR" --shell /bin/bash "$APP_USER"
+fi
+
+# Setup application directory
 echo "Setting up application directory: $APP_DIR..."
-mkdir -p $APP_DIR
-chown -R root:root $APP_DIR
-chmod -R 755 $APP_DIR
+mkdir -p "$APP_DIR"
+chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
+chmod -R 750 "$APP_DIR"
 
 # Extract application files
 echo "Extracting application files..."
 if [ -f "Webapp.zip" ]; then
     unzip -o Webapp.zip -d "$APP_DIR"
-    chown -R root:root "$APP_DIR"
-    chmod -R 755 "$APP_DIR"
+    chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
+    chmod -R 750 "$APP_DIR"
 else
     echo "Warning: Application ZIP file not found! Skipping extraction."
 fi
 
-# Change to extracted directory (handling possible variations in folder name)
-cd "$APP_DIR"/Webapp* || { echo "Error: Webapp folder not found"; exit 1; }
+# Change to extracted directory
+if cd "$APP_DIR"/Webapp 2>/dev/null; then
+    echo "Changed to application directory: $(pwd)"
+else
+    echo "Error: Webapp folder not found inside $APP_DIR"
+    exit 1
+fi
 
-# Setup virtual environment
+# Setup virtual environment as appuser
 echo "Setting up virtual environment..."
-python3 -m venv venv
-source venv/bin/activate || { echo "Error: Virtual environment activation failed"; exit 1; }
+sudo -u "$APP_USER" bash -c "cd $APP_DIR/Webapp && python3 -m venv venv"
+chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR/Webapp/venv"
 
-# Install dependencies
-echo "Installing Python dependencies..."
-pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+if [[ -f "$APP_DIR/Webapp/requirements.txt" ]]; then
+    echo "Installing Python dependencies..."
+    sudo -u "$APP_USER" bash -c "cd $APP_DIR/Webapp && source venv/bin/activate && pip install --no-cache-dir -r requirements.txt" || { echo "Failed to install dependencies"; exit 1; }
+else
+    echo "Warning: requirements.txt not found in $APP_DIR/Webapp! Skipping dependency installation."
+fi
+
+# Move .env file securely
+echo "Moving .env file to the application directory..."
+if [[ -f "/root/.env" ]]; then
+    mv /root/.env "$APP_DIR/Webapp/" || { echo "Failed to move .env"; exit 1; }
+    
+    # Change ownership to appuser
+    chown "$APP_USER":"$APP_GROUP" "$APP_DIR/Webapp/.env"
+
+    # Set secure permissions
+    chmod 600 "$APP_DIR/Webapp/.env"
+
+    echo ".env file moved and secured successfully!"
+else
+    echo "Warning: .env file not found in /root! Skipping move."
+fi
 
 echo "Setup completed successfully!"
+echo "To activate the virtual environment, run: source $APP_DIR/Webapp/venv/bin/activate"

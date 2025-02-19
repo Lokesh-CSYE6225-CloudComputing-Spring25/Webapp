@@ -1,7 +1,7 @@
 # Flask routes for API
 from flask import Blueprint, request, make_response
 from .models import db, HealthCheck
-from datetime import datetime
+from datetime import datetime, timezone
 
 healthz = Blueprint("healthz", __name__)
 
@@ -10,12 +10,18 @@ def add_common_headers(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Date"] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+    response.headers["Date"] = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
     response.headers["Content-Length"] = "0"  # Force empty body
     return response
 
 @healthz.route("/healthz", methods=["GET"])
 def check_health():
+
+    #Reject query parameters**
+    if request.args:  # Check if any query params exist
+        response = make_response("", 400)
+        return add_common_headers(response)
+
     # Check if a request body is present
     if request.data:
         response = make_response("", 400)

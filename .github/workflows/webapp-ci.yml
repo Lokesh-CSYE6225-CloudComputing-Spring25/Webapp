@@ -13,13 +13,17 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
     - name: Configure MySQL
       run: |
         sudo service mysql start
+        sleep 10  # Ensure MySQL is ready
+        sudo mysqladmin -u root password "${{ secrets.DB_PASS }}"
         sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
-        sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "CREATE USER IF NOT EXISTS ${{ secrets.DB_USER }}@'localhost' IDENTIFIED BY '${{ secrets.DB_PASS }}';"
-        sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO ${{ secrets.DB_USER }}@'localhost';"
-        sudo mysql -u root -p"${{ secrets.DBPASS }}" -e "FLUSH PRIVILEGES;"
+        sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASS }}';"
+        sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'localhost';"
+        sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "FLUSH PRIVILEGES;"
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:

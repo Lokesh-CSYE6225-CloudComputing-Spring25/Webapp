@@ -347,3 +347,29 @@ You can test the `/healthz` endpoint using `curl` or Postman:
   ```
 
 ---
+
+Assignment 3
+
+📝 Overview
+
+Assignment 3 focuses on implementing Continuous Integration (CI) with GitHub Actions for the Web App.
+
+📚 Steps Completed
+
+👉 Created and configured GitHub Actions workflow for Web App CI/CD👉 Implemented automated testing using pytest👉 Configured branch protection rules to enforce CI checks before merging PRs👉 Ensured CI runs on every pull request to validate changes
+
+### Web App CI/CD Pipeline
+- Runs pytest to validate API functionality.
+- Ensures /healthz endpoint behaves correctly.
+- Blocks PR merges if any tests fail.
+
+### Branch Protection Rules
+
+1. Require status checks before merging
+   - Web App CI must pass before merging.
+2. Require branches to be up-to-date before merging
+   - Ensures branches are synced with the latest code.
+3. No direct commits to main branch
+   - Changes must go through PRs with CI/CD validation.
+
+🚀 This setup ensures best practices for Web Application development with Continuous Integration!

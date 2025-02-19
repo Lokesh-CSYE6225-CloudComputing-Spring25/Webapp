@@ -20,15 +20,7 @@ jobs:
     - name: Start MySQL and Configure Root Password
       run: |
         sudo service mysql start
-        sleep 10  # Allow MySQL to initialize
-
-        # Check if MySQL root password is already set
-        if sudo mysql -u root -e "SELECT 1;" 2>/dev/null; then
-          echo "MySQL root access confirmed without a password."
-        else
-          echo "Setting MySQL root password..."
-          sudo mysqladmin -u root password "$DB_PASS"
-        fi
+        sleep 10
 
     - name: Configure MySQL Database and User
       run: |

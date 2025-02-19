@@ -4,8 +4,8 @@ on:
   pull_request:
 
 env:
-  HOST: ${{ secrets.DB_HOST }}
-  
+  HOST: ${{ secrets.HOST }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,11 +14,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Configure MySQL
+    - name: Start MySQL and Configure Root Password
       run: |
         sudo service mysql start
-        sleep 10  # Ensure MySQL is ready
-        sudo mysqladmin -u root password "${{ secrets.DB_PASS }}"
+        sleep 10  # Allow MySQL to initialize
+
+        # Check if MySQL root password is already set
+        if sudo mysql -u root -e "SELECT 1;" 2>/dev/null; then
+          echo "MySQL root access confirmed without a password."
+        else
+          echo "Setting MySQL root password..."
+          sudo mysqladmin -u root password "${{ secrets.DB_PASS }}"
+        fi
+
+    - name: Configure MySQL Database and User
+      run: |
         sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
         sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASS }}';"
         sudo mysql -u root -p"${{ secrets.DB_PASS }}" -e "GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'localhost';"
@@ -37,7 +47,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest requests 
+        pip install pytest requests
       
     - name: Wait and Run Integration Test
       run: |

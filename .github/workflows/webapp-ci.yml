@@ -38,7 +38,7 @@ jobs:
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
-          echo "DATABASE_URL=mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "DATABASE_URL=mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:8080/${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
       - name: Verify Secrets (Debugging)
         run: |
           echo "MYSQL_DATABASE: $MYSQL_DATABASE"

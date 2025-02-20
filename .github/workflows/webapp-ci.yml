@@ -29,31 +29,52 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Set up virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
       - name: Install dependencies
         run: |
+          source venv/bin/activate
           pip install -r requirements.txt
-      - name: Set environment variables
+
+      - name: Debug GitHub Secrets
+        run: |
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}"
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}"
+          echo "MYSQL_PASSWORD=[HIDDEN]"
+          echo "MYSQL_ROOT_PASSWORD=[HIDDEN]"
+
+      - name: Set Environment Variables
         run: |
           echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
           echo "DATABASE_URL=mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
-      - name: Verify Secrets (Debugging)
+
+      - name: Create `.env` File
         run: |
-          echo "MYSQL_DATABASE: $MYSQL_DATABASE"
-          echo "MYSQL_USER: $MYSQL_USER"
-          echo "MYSQL_PASSWORD: [HIDDEN]"
-          echo "MYSQL_ROOT_PASSWORD: [HIDDEN]"
-          echo "DATABASE_URL: $DATABASE_URL"
+          touch .env
+          echo "DB_NAME=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "DB_USER=${{ secrets.MYSQL_USER }}" >> .env
+          echo "DB_PASS=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          cat .env  # Debugging: Show env file contents
+
       - name: Wait for MySQL to be ready
         run: |
-          until mysqladmin ping -h 127.0.0.1 -u $MYSQL_USER --password=$MYSQL_PASSWORD --silent; do
-            echo "Waiting for database connection..."
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -u"${{ secrets.MYSQL_USER }}" --password="${{ secrets.MYSQL_PASSWORD }}" --silent && echo "Database is ready!" && exit 0
+            echo "Still waiting..."
             sleep 5
           done
-      - name: Run database migrations
+          echo "MySQL failed to start!"
+          exit 1
+
+      - name: Run Tests
         run: |
-          python manage.py db upgrade || echo "No migrations needed"
-      - name: Run tests with verbose output
-        run: pytest -vv --capture=no tests/test_api.py
+          source venv/bin/activate
+          pytest -vv --capture=no tests/test_api.py

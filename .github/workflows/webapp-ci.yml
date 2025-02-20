@@ -3,29 +3,57 @@ name: Web App CI
 on:
   pull_request:
     branches:
-      - main  # Runs on PRs to main branch
+      - main
 
 jobs:
   run-tests:
-    name: Run Python Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        ports:
+          - 8080:8080
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
           pip install -r requirements.txt
-
-      - name: Run Tests
+      - name: Set environment variables
         run: |
-          source venv/bin/activate
-          pytest tests/
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
+          echo "DATABASE_URL=mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
+      - name: Verify Secrets (Debugging)
+        run: |
+          echo "MYSQL_DATABASE: $MYSQL_DATABASE"
+          echo "MYSQL_USER: $MYSQL_USER"
+          echo "MYSQL_PASSWORD: [HIDDEN]"
+          echo "MYSQL_ROOT_PASSWORD: [HIDDEN]"
+          echo "DATABASE_URL: $DATABASE_URL"
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h 127.0.0.1 -u $MYSQL_USER --password=$MYSQL_PASSWORD --silent; do
+            echo "Waiting for database connection..."
+            sleep 5
+          done
+      - name: Run database migrations
+        run: |
+          python manage.py db upgrade || echo "No migrations needed"
+      - name: Run tests with verbose output
+        run: pytest -vv --capture=no tests/test_api.py

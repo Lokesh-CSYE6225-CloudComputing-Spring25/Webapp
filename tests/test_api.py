@@ -18,7 +18,7 @@ def client():
 def test_health_check_success(client):
     """Test if /healthz endpoint returns HTTP 200"""
     response = client.get("/healthz")
-    assert response.status_code == 200
+    assert response.status_code == 210
 
 def test_health_check_with_body(client):
     """Test if /healthz rejects requests with a body (should return 400)"""

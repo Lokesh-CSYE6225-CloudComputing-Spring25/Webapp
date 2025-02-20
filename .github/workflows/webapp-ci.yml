@@ -29,48 +29,31 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Set up virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-
       - name: Install dependencies
         run: |
-          source venv/bin/activate
           pip install -r requirements.txt
-
-      - name: Debug MySQL Service
+      - name: Set environment variables
         run: |
-          docker ps -a
-          docker logs $(docker ps -q --filter ancestor=mysql:8.0)
-
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
+          echo "DATABASE_URL=mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
+      - name: Verify Secrets (Debugging)
+        run: |
+          echo "MYSQL_DATABASE: $MYSQL_DATABASE"
+          echo "MYSQL_USER: $MYSQL_USER"
+          echo "MYSQL_PASSWORD: [HIDDEN]"
+          echo "MYSQL_ROOT_PASSWORD: [HIDDEN]"
+          echo "DATABASE_URL: $DATABASE_URL"
       - name: Wait for MySQL to be ready
         run: |
-          echo "Checking MySQL container logs..."
-          docker ps
-          docker logs $(docker ps -q --filter ancestor=mysql:8.0) || echo "No logs found"
-
-          echo "Waiting for MySQL to be ready..."
-          for i in {1..30}; do
-            mysqladmin ping -h 127.0.0.1 -u"${{ secrets.MYSQL_USER }}" --password="${{ secrets.MYSQL_PASSWORD }}" --silent && echo "Database is ready!" && exit 0
-            echo "Still waiting..."
+          until mysqladmin ping -h 127.0.0.1 -u $MYSQL_USER --password=$MYSQL_PASSWORD --silent; do
+            echo "Waiting for database connection..."
             sleep 5
           done
-          echo "MySQL failed to start!"
-          exit 1
-
-      - name: Fix MySQL Authentication Method
-        run: |
-          echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.MYSQL_ROOT_PASSWORD }}'; FLUSH PRIVILEGES;" | mysql -h 127.0.0.1 -u root --password="${{ secrets.MYSQL_ROOT_PASSWORD }}"
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-
       - name: Run database migrations
         run: |
-          source venv/bin/activate
           python manage.py db upgrade || echo "No migrations needed"
-
       - name: Run tests with verbose output
-        run: |
-          source venv/bin/activate
-          pytest -vv --capture=no tests/test_api.py
+        run: pytest -vv --capture=no tests/test_api.py

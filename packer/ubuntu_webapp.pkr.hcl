@@ -1,87 +1,75 @@
 packer {
   required_plugins {
     amazon = {
+      version = ">= 1.2.8"
       source  = "github.com/hashicorp/amazon"
-      version = ">=1.0.0"
     }
     googlecompute = {
       source  = "github.com/hashicorp/googlecompute"
-      version = ">=1.0.0"
+      version = "~> 1"
     }
   }
 }
 
-variable "aws_region" {
-  default = "us-east-1"
-}
-
-variable "gcp_project_id" {}
-
-variable "gcp_region" {
-  default = "us-central1"
-}
-
-variable "webapp_repo" {
-  default = "/opt/csye6225/Webapp"
-}
-
-source "amazon-ebs" "aws_webapp" {
-  region      = var.aws_region
-  source_ami  = "ami-0fc5d935ebf8bc3bc"  # Ubuntu 24.04 LTS
+# AWS Source Image
+source "amazon-ebs" "ubuntu" {
+  ami_name      = "awsWebapp-{{timestamp}}"
   instance_type = "t2.micro"
+  region        = "us-east-1"
   ssh_username  = "ubuntu"
-
-  ami_name      = "webapp-ubuntu24-${timestamp()}"
-  ami_virtualization_type = "hvm"
-
-  tags = {
-    Name = "webapp-image"
-  }
-
-  launch_block_device_mappings {
-    device_name = "/dev/sda1"
-    volume_size = 10
-    volume_type = "gp2"
-  }
-
-  provisioner "file" {
-    source      = "install_script.sh"
-    destination = "/tmp/install_script.sh"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "chmod +x /tmp/install_script.sh",
-      "sudo /tmp/install_script.sh"
-    ]
+  profile       = "dev"
+  source_ami_filter {
+    filters = {
+      name                = "ubuntu/images/*ubuntu-noble-24.04-amd64-server-*"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    owners      = ["099720109477"] # Canonical's AWS Account ID for Ubuntu
+    most_recent = true
   }
 }
 
-source "googlecompute" "gcp_webapp" {
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  source_image_family = "ubuntu-2404-lts"
-  machine_type   = "e2-small"
-
-  image_name     = "webapp-gcp-ubuntu24-${timestamp()}"
-  image_family   = "webapp-custom-images"
-
-  disk_size      = 10
-  disk_type      = "pd-standard"
-
-  provisioner "file" {
-    source      = "install_script.sh"
-    destination = "/tmp/install_script.sh"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "chmod +x /tmp/install_script.sh",
-      "sudo /tmp/install_script.sh"
-    ]
-  }
+# GCP Source Image
+source "googlecompute" "ubuntu" {
+  project_id          = "webappdev-451818"
+  image_name          = "gcp-webapp-{{timestamp}}"
+  source_image        = "ubuntu-2404-noble-amd64-v20250214"
+  source_image_family = "ubuntu-os-cloud"
+  machine_type        = "n1-standard-1"
+  zone                = "us-central1-c"
+  ssh_username        = "ubuntu"
 }
 
+# Build Process
 build {
-  sources = ["source.amazon-ebs.aws_webapp", "source.googlecompute.gcp_webapp"]
+  sources = [
+    "source.amazon-ebs.ubuntu",
+    "source.googlecompute.ubuntu"
+  ]
+
+  # Upload the setup script
+  provisioner "file" {
+    source      = "../scripts/setup_webapp.sh"
+    destination = "/tmp/setup_webapp.sh"
+  }
+
+  # Upload the Webapp.zip file
+  provisioner "file" {
+    source      = "../Webapp.zip"
+    destination = "/tmp/Webapp.zip"
+  }
+
+  # Upload the .env file manually for now
+  provisioner "file" {
+    source      = "../.env"
+    destination = "/tmp/.env"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "chmod +x /tmp/setup_webapp.sh",
+      "sudo mv /tmp/.env /root/.env", # Move .env to /root/ for use in script
+      "sudo /tmp/setup_webapp.sh"
+    ]
+  }
 }

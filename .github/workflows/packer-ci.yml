@@ -1,0 +1,26 @@
+name: "Packer CI - Format & Validate"
+
+on:
+  pull_request:
+    branches:
+      - main  # Runs on PRs to main branch (change if needed)
+
+jobs:
+  packer-check:
+    name: "Packer Format & Validate"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@main
+
+      - name: Check Packer format
+        run: |
+          packer fmt -check . || (echo "Packer formatting issues found. Run 'packer fmt .' to fix." && exit 1)
+
+      - name: Validate Packer template
+        run: |
+          packer validate . || (echo "Packer validation failed. Fix errors before merging." && exit 1)

@@ -69,4 +69,4 @@ jobs:
 
       - name: Build Packer Image for AWS and GCP
         run: |
-          packer build -var "aws_region=us-east-1" -var "gcp_project_id="${{ secrets.GCP_PROJECT_ID }}" packer/ubuntu_webapp.pkr.hcl
+          packer build -var "aws_region=us-east-1" -var "gcp_project_id="${{ secrets.GCP_PROJECT_ID }}" ubuntu_webapp.pkr.hcl

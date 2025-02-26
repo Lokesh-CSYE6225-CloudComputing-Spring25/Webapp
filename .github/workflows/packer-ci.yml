@@ -38,7 +38,6 @@ jobs:
 
       - name: Initialize Packer (Install Plugins)
         run: |
-          cd packer
           packer init ubuntu_webapp.pkr.hcl
 
       - name: Check Packer format

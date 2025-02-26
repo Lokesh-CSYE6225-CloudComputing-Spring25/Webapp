@@ -28,13 +28,13 @@ jobs:
 
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "DB_USER=${{ secrets.DB_USER }}" >> packer/.env
-          echo "DB_PASS=${{ secrets.DB_PASS }}" >> packer/.env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> packer/.env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> packer/.env
-          echo "APP_USER=${{ secrets.APP_USER }}" >> packer/.env
-          echo "APP_GROUP=${{ secrets.APP_GROUP }}" >> packer/.env
-          echo "APP_DIR=${{ secrets.APP_DIR }}" >> packer/.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "APP_USER=${{ secrets.APP_USER }}" >> .env
+          echo "APP_GROUP=${{ secrets.APP_GROUP }}" >> .env
+          echo "APP_DIR=${{ secrets.APP_DIR }}" >> .env
 
       - name: Initialize Packer (Install Plugins)
         run: |

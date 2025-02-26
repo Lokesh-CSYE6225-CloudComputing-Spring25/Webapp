@@ -37,23 +37,11 @@ jobs:
           sudo apt-get install -y google-cloud-cli
 
       # 🔹 AWS Authentication (Static Credentials)
-#      - name: Authenticate AWS CLI
-#        run: |
-#          aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
-#          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-#          aws configure set region us-east-1
-
-      - name: Authenticate AWS CLI (via Environment Variables)
+      - name: Authenticate AWS CLI
         run: |
-          echo "[default]" > ~/.aws/credentials
-          echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
-          echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
-          echo "region=us-east-1" >> ~/.aws/config
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-
+          aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          aws configure set region us-east-1
 
       # 🔹 Authenticate GCP CLI using Service Account Key
       - name: Authenticate to GCP CLI

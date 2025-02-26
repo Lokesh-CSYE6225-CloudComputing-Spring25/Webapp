@@ -113,8 +113,8 @@ else
 fi
 
 # Change to extracted directory
-if [ -d "$APP_DIR/Webapp" ]; then
-    cd "$APP_DIR/Webapp" || exit 1
+if [ -d "$APP_DIR" ]; then
+    cd "$APP_DIR" || exit 1
     echo "Changed to application directory: $(pwd)"
 else
     echo "Error: Webapp folder not found inside $APP_DIR. Extraction might have failed."
@@ -124,27 +124,27 @@ fi
 
 # Setup virtual environment as appuser
 echo "Setting up virtual environment..."
-sudo -u "$APP_USER" bash -c "cd $APP_DIR/Webapp && python3 -m venv venv"
-chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR/Webapp/venv"
+sudo -u "$APP_USER" bash -c "cd $APP_DIR && python3 -m venv venv"
+chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR/venv"
 
 # Install Python dependencies
-if [[ -f "$APP_DIR/Webapp/requirements.txt" ]]; then
+if [[ -f "$APP_DIR/requirements.txt" ]]; then
     echo "Installing Python dependencies..."
-    sudo -u "$APP_USER" bash -c "cd $APP_DIR/Webapp && source venv/bin/activate && pip install --no-cache-dir -r requirements.txt" || { echo "Failed to install dependencies"; exit 1; }
+    sudo -u "$APP_USER" bash -c "cd $APP_DIR && source venv/bin/activate && pip install --no-cache-dir -r requirements.txt" || { echo "Failed to install dependencies"; exit 1; }
 else
-    echo "Warning: requirements.txt not found in $APP_DIR/Webapp! Skipping dependency installation."
+    echo "Warning: requirements.txt not found in $APP_DIR! Skipping dependency installation."
 fi
 
 # Move .env file securely
 echo "Moving .env file to the application directory..."
 if [[ -f "/root/.env" ]]; then
-    mv /root/.env "$APP_DIR/Webapp/" || { echo "Failed to move .env"; exit 1; }
+    mv /root/.env "$APP_DIR/" || { echo "Failed to move .env"; exit 1; }
     
     # Change ownership to appuser
-    chown "$APP_USER":"$APP_GROUP" "$APP_DIR/Webapp/.env"
+    chown "$APP_USER":"$APP_GROUP" "$APP_DIR/.env"
 
     # Set secure permissions
-    chmod 600 "$APP_DIR/Webapp/.env"
+    chmod 600 "$APP_DIR/.env"
 
     echo ".env file moved and secured successfully!"
 else
@@ -154,4 +154,4 @@ fi
 sudo cp /tmp/systemd_webapp.service /etc/systemd/system/systemd_webapp.service
 
 echo "Setup completed successfully!"
-echo "To activate the virtual environment, run: source $APP_DIR/Webapp/venv/bin/activate"
+echo "To activate the virtual environment, run: source $APP_DIR/venv/bin/activate"

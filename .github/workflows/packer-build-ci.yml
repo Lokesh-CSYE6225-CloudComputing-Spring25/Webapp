@@ -32,7 +32,9 @@ jobs:
 
       - name: Install GCP CLI
         run: |
-          sudo apt-get install -y google-cloud-sdk
+          curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /etc/apt/trusted.gpg.d/google.asc
+          sudo apt-get update
+          sudo apt-get install -y google-cloud-cli
 
       # 🔹 AWS Authentication (Static Credentials)
       - name: Authenticate AWS CLI

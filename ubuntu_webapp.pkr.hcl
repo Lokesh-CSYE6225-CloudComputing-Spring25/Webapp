@@ -11,6 +11,14 @@ packer {
   }
 }
 
+variable "aws_region" {
+  type    = string
+}
+
+variable "gcp_project_id" {
+  type    = string
+}
+
 # AWS Source Image
 source "amazon-ebs" "ubuntu" {
   ami_name      = "awsWebapp-{{timestamp}}"

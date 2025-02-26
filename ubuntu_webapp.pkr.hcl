@@ -49,19 +49,19 @@ build {
 
   # Upload the setup script
   provisioner "file" {
-    source      = "../scripts/setup_webapp.sh"
+    source      = "/scripts/setup_webapp.sh"
     destination = "/tmp/setup_webapp.sh"
   }
 
   # Upload the Webapp.zip file
   provisioner "file" {
-    source      = "../Webapp.zip"
+    source      = "Webapp.zip"
     destination = "/tmp/Webapp.zip"
   }
 
   # Upload the .env file manually for now
   provisioner "file" {
-    source      = "../.env"
+    source      = ".env"
     destination = "/tmp/.env"
   }
 

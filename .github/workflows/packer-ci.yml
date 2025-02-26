@@ -17,6 +17,11 @@ jobs:
       - name: Install Packer
         uses: hashicorp/setup-packer@main
 
+      - name: Initialize Packer (Install Plugins)
+        run: |
+          cd packer
+          packer init ubuntu_webapp.pkr.hcl
+
       - name: Check Packer format
         run: |
           packer fmt -check . || (echo "Packer formatting issues found. Run 'packer fmt .' to fix." && exit 1)

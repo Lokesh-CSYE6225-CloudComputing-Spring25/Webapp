@@ -31,13 +31,15 @@ source "amazon-ebs" "ubuntu" {
 
 # GCP Source Image
 source "googlecompute" "ubuntu" {
-  project_id          = "webappdev-451818"
-  image_name          = "gcp-webapp-{{timestamp}}"
-  source_image        = "ubuntu-2404-noble-amd64-v20250214"
-  source_image_family = "ubuntu-os-cloud"
-  machine_type        = "n1-standard-1"
-  zone                = "us-central1-c"
-  ssh_username        = "ubuntu"
+  project_id            = "webappdev-451818"
+  image_name            = "gcp-webapp-{{timestamp}}"
+  source_image          = "ubuntu-2404-noble-amd64-v20250214"
+  source_image_family   = "ubuntu-os-cloud"
+  machine_type          = "n1-standard-1"
+  zone                  = "us-central1-c"
+  ssh_username          = "ubuntu"
+  disk_size             = 25
+  service_account_email = "webappserviceaccount@webappdev-451818.iam.gserviceaccount.com"
 }
 
 # Build Process

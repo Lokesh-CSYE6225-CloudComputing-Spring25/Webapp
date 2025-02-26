@@ -39,8 +39,8 @@ jobs:
       # 🔹 AWS Authentication (Static Credentials)
       - name: Authenticate AWS CLI
         run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           aws configure set region us-east-1
 
       # 🔹 Authenticate GCP CLI using Service Account Key
@@ -48,12 +48,12 @@ jobs:
         run: |
           echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | base64 --decode > gcp-key.json
           gcloud auth activate-service-account --key-file=gcp-key.json
-          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud config set project "${{ secrets.GCP_PROJECT_ID }}"
 
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
           create_credentials_file: true
           export_environment_variables: true
 
@@ -75,4 +75,4 @@ jobs:
 
       - name: Build Packer Image for AWS and GCP
         run: |
-          packer build -var "aws_region=us-east-1" -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" packer/ubuntu_webapp.pkr.hcl
+          packer build -var "aws_region=us-east-1" -var "gcp_project_id="${{ secrets.GCP_PROJECT_ID }}" packer/ubuntu_webapp.pkr.hcl

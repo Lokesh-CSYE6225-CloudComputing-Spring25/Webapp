@@ -63,10 +63,6 @@ jobs:
           zip -r Webapp.zip ./
           echo "Application artifact created: Webapp.zip"
 
-      - name: Initialize Packer
-        run: |
-          packer init ubuntu_webapp.pkr.hcl
-
       - name: Create .env File
         run: |
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
@@ -77,6 +73,10 @@ jobs:
           echo "APP_GROUP=${{ secrets.APP_GROUP }}" >> .env
           echo "APP_DIR=${{ secrets.APP_DIR }}" >> .env
           echo ".env file created successfully!"
+
+      - name: Initialize Packer
+        run: |
+          packer init ubuntu_webapp.pkr.hcl
 
       - name: Build Packer Image for AWS and GCP
         run: |

@@ -1,0 +1,19 @@
+[Unit]
+Description=CSYE6225 Web App
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/csye6225/Webapp
+ExecStart=/opt/csye6225/Webapp/venv/bin/python /opt/csye6225/Webapp/run.py
+Restart=always
+RestartSec=5s
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=csye6225-webapp
+Environment="PATH=/opt/csye6225/Webapp/venv/bin"
+Environment="FLASK_ENV=production"  # Set this if using Flask
+EnvironmentFile=/opt/csye6225/Webapp/.env  # Use this if you store secrets in .env
+
+[Install]
+WantedBy=multi-user.target

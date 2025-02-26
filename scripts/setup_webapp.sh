@@ -43,7 +43,7 @@ apt update -y && apt upgrade -y
 # Install required packages
 echo "Installing required packages..."
 export DEBIAN_FRONTEND=noninteractive
-apt install -y mysql-server python3 python3-pip python3-venv unzip pkg-config libmysqlclient-dev || { echo "Package installation failed"; exit 1; }
+apt install -y mysql-server python3 python3-pip python3-venv unzip pkg-config libmysqlclient-dev nginx || { echo "Package installation failed"; exit 1; }
 
 # Check if installations were successful
 check_package "mysql"
@@ -51,10 +51,14 @@ check_package "python3"
 check_package "pip3"
 check_package "unzip"
 
+#Start and enable MySQL
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
 # Start and enable MySQL
 systemctl enable mysql && systemctl start mysql
 
-# **FIX: Change MySQL Root Authentication from auth_socket to mysql_native_password**
+# Change MySQL Root Authentication from auth_socket to mysql_native_password**
 echo "Changing MySQL root authentication method..."
 sudo mysql --user=root <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
@@ -100,8 +104,8 @@ chmod -R 750 "$APP_DIR"
 
 # Extract application files
 echo "Extracting application files..."
-if [ -f "Webapp.zip" ]; then
-    unzip -o Webapp.zip -d "$APP_DIR"
+if [ -f "/tmp/Webapp.zip" ]; then
+    unzip -o /tmp/Webapp.zip -d "$APP_DIR"
     chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
     chmod -R 750 "$APP_DIR"
 else
@@ -109,12 +113,14 @@ else
 fi
 
 # Change to extracted directory
-if cd "$APP_DIR"/Webapp 2>/dev/null; then
+if [ -d "$APP_DIR/Webapp" ]; then
+    cd "$APP_DIR/Webapp" || exit 1
     echo "Changed to application directory: $(pwd)"
 else
-    echo "Error: Webapp folder not found inside $APP_DIR"
+    echo "Error: Webapp folder not found inside $APP_DIR. Extraction might have failed."
     exit 1
 fi
+
 
 # Setup virtual environment as appuser
 echo "Setting up virtual environment..."

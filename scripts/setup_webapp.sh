@@ -151,5 +151,7 @@ else
     echo "Warning: .env file not found in /root! Skipping move."
 fi
 
+sudo cp /tmp/systemd_webapp.service /etc/systemd/system/systemd_webapp.service
+
 echo "Setup completed successfully!"
 echo "To activate the virtual environment, run: source $APP_DIR/Webapp/venv/bin/activate"

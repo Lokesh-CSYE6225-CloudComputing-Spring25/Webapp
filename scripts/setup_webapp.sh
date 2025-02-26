@@ -51,7 +51,7 @@ check_package "python3"
 check_package "pip3"
 check_package "unzip"
 
-#Start and enable MySQL
+#Start and enable nginx
 sudo systemctl enable nginx
 sudo systemctl start nginx
 

@@ -67,6 +67,12 @@ build {
     destination = "/tmp/.env"
   }
 
+  # Upload the systemd file manually for now
+  provisioner "file" {
+    source      = "systemd_webapp.service"
+    destination = "/tmp/systemd_webapp.service"
+  }
+
   provisioner "shell" {
     inline = [
       "chmod +x /tmp/setup_webapp.sh",

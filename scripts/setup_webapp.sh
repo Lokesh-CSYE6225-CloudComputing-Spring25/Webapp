@@ -93,7 +93,7 @@ fi
 # Create user if it doesn't exist
 if ! id "$APP_USER" >/dev/null 2>&1; then
     echo "Creating user: $APP_USER"
-    sudo useradd --system --gid "$APP_GROUP" --home "$APP_DIR" --shell /bin/bash "$APP_USER"
+    sudo useradd --system --gid "$APP_GROUP" --home "$APP_DIR" -s /usr/sbin/nologin "$APP_USER"
 fi
 
 # Setup application directory

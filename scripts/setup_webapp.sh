@@ -87,27 +87,25 @@ sudo mysql -u root -p"$DB_PASS" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;" || 
 # Create group if it doesn't exist
 if ! getent group "$APP_GROUP" >/dev/null; then
     echo "Creating group: $APP_GROUP"
-    groupadd --system "$APP_GROUP"
+    sudo groupadd --system "$APP_GROUP"
 fi
 
 # Create user if it doesn't exist
 if ! id "$APP_USER" >/dev/null 2>&1; then
     echo "Creating user: $APP_USER"
-    useradd --system --gid "$APP_GROUP" --home "$APP_DIR" --shell /bin/bash "$APP_USER"
+    sudo useradd --system --gid "$APP_GROUP" --home "$APP_DIR" --shell /bin/bash "$APP_USER"
 fi
 
 # Setup application directory
 echo "Setting up application directory: $APP_DIR..."
-mkdir -p "$APP_DIR"
-chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
-chmod -R 750 "$APP_DIR"
+sudo mkdir -p "$APP_DIR"
+sudo chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
+sudo chmod -R 750 "$APP_DIR"
 
 # Extract application files
 echo "Extracting application files..."
 if [ -f "/tmp/Webapp.zip" ]; then
     unzip -o /tmp/Webapp.zip -d "$APP_DIR"
-    chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
-    chmod -R 750 "$APP_DIR"
 else
     echo "Warning: Application ZIP file not found! Skipping extraction."
 fi
@@ -125,7 +123,7 @@ fi
 # Setup virtual environment as appuser
 echo "Setting up virtual environment..."
 sudo -u "$APP_USER" bash -c "cd $APP_DIR && python3 -m venv venv"
-chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR/venv"
+sudo chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR/venv"
 
 # Install Python dependencies
 if [[ -f "$APP_DIR/requirements.txt" ]]; then
@@ -138,13 +136,13 @@ fi
 # Move .env file securely
 echo "Moving .env file to the application directory..."
 if [[ -f "/root/.env" ]]; then
-    mv /root/.env "$APP_DIR/" || { echo "Failed to move .env"; exit 1; }
+    sudo mv /root/.env "$APP_DIR/" || { echo "Failed to move .env"; exit 1; }
     
     # Change ownership to appuser
-    chown "$APP_USER":"$APP_GROUP" "$APP_DIR/.env"
+    sudo chown "$APP_USER":"$APP_GROUP" "$APP_DIR/.env"
 
     # Set secure permissions
-    chmod 600 "$APP_DIR/.env"
+    sudo chmod 600 "$APP_DIR/.env"
 
     echo ".env file moved and secured successfully!"
 else
@@ -152,6 +150,13 @@ else
 fi
 
 sudo cp /tmp/systemd_webapp.service /etc/systemd/system/systemd_webapp.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable myapp
+sudo systemctl start myapp
+sudo systemctl restart myapp
+
+sudo chown -R appuser:appgroup /opt/csye6225/
 
 echo "Setup completed successfully!"
 echo "To activate the virtual environment, run: source $APP_DIR/venv/bin/activate"

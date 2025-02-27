@@ -12,9 +12,6 @@ RestartSec=5s
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=csye6225-webapp
-Environment="PATH=/opt/csye6225/venv/bin"
-Environment="FLASK_ENV=production"  # Set this if using Flask
-EnvironmentFile=/opt/csye6225/.env  # Use this if you store secrets in .env
 
 [Install]
 WantedBy=multi-user.target

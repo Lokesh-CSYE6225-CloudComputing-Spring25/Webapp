@@ -152,9 +152,9 @@ fi
 sudo cp /tmp/systemd_webapp.service /etc/systemd/system/systemd_webapp.service
 
 sudo systemctl daemon-reload
-sudo systemctl enable myapp
-sudo systemctl start myapp
-sudo systemctl restart myapp
+sudo systemctl enable systemd_webapp
+sudo systemctl start systemd_webapp
+sudo systemctl restart systemd_webapp
 
 sudo chown -R appuser:appgroup /opt/csye6225/
 

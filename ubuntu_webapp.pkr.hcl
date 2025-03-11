@@ -62,13 +62,13 @@ build {
 
   # Upload the setup script
   provisioner "file" {
-    source      = "scripts/setup_webapp.sh"
+    source      = ""
     destination = "/tmp/setup_webapp.sh"
   }
 
   # Upload the Webapp.zip file
   provisioner "file" {
-    source      = "Webapp.zip"
+    source      = ""
     destination = "/tmp/Webapp.zip"
   }
 
@@ -80,7 +80,7 @@ build {
 
   # Upload the systemd file manually for now
   provisioner "file" {
-    source      = "systemd_webapp.service"
+    source      = ""
     destination = "/tmp/systemd_webapp.service"
   }
 

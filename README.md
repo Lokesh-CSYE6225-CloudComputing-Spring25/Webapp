@@ -4,7 +4,7 @@ This repository contains all assignments related to the CSYE 6225 course.
 
 ---
 
-## 📌 Table of Contents
+## 📌 Table of Contents ()
 - [Project Overview](#project-overview)
 - [Features](#features)
 - [Assignment 1](#assignment-1)

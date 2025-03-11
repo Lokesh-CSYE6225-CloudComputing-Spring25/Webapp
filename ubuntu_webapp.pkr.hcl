@@ -62,7 +62,7 @@ build {
 
   # Upload the setup script
   provisioner "file" {
-    source      = "scripts/setup_webapp.sh"
+    source      = "scripts"
     destination = "/tmp/setup_webapp.sh"
   }
 

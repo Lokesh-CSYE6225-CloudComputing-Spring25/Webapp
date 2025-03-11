@@ -40,7 +40,7 @@ jobs:
         run: |
           packer init ubuntu_webapp.pkr.hcl
 
-      - name: Check Packer format
+  - name: Check Packer format
         run: |
           packer fmt -check . || (echo "Packer formatting issues found. Run 'packer fmt .' to fix." && exit 1)
 

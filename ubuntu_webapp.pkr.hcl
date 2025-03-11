@@ -89,6 +89,6 @@ build {
       "chmod +x /tmp/setup_webapp.sh",
       "sudo mv /tmp/.env /root/.env", # Move .env to /root/ for use in script
       "sudo /tmp/setup_webapp.sh"
-    ]
+
   }
 }

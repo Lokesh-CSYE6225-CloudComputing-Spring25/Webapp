@@ -47,3 +47,4 @@ jobs:
       - name: Validate Packer template
         run: |
           packer validate ubuntu_webapp.pkr.hcl || (echo "Packer validation failed. Fix errors before merging." && exit 1)
+test

@@ -11,11 +11,6 @@ packer {
   }
 }
 
-variable "aws_region" {
-  type    = string
-  default = "us-east-1"
-}
-
 variable "gcp_project_id" {
   type    = string
   default = "webappdev-451818"
@@ -89,6 +84,6 @@ build {
       "chmod +x /tmp/setup_webapp.sh",
       "sudo mv /tmp/.env /root/.env", # Move .env to /root/ for use in script
       "sudo /tmp/setup_webapp.sh"
-
+    ]
   }
 }

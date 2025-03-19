@@ -11,9 +11,15 @@ packer {
   }
 }
 
+# Define Variables
 variable "aws_region" {
   type    = string
   default = "us-east-1"
+}
+
+variable "aws_instance_type" {
+  type    = string
+  default = "t2.micro"
 }
 
 variable "gcp_project_id" {
@@ -21,12 +27,46 @@ variable "gcp_project_id" {
   default = "webappdev-451818"
 }
 
+variable "gcp_machine_type" {
+  type    = string
+  default = "n1-standard-1"
+}
+
+variable "gcp_zone" {
+  type    = string
+  default = "us-central1-c"
+}
+
+variable "service_account_email" {
+  type    = string
+  default = "webappserviceaccount@webappdev-451818.iam.gserviceaccount.com"
+}
+
+variable "setup_script_path" {
+  type    = string
+  default = "scripts/setup_webapp.sh"
+}
+
+variable "webapp_zip_path" {
+  type    = string
+  default = "Webapp.zip"
+}
+
+variable "env_file_path" {
+  type    = string
+  default = ".env"
+}
+
+variable "systemd_service_path" {
+  type    = string
+  default = "systemd_webapp.service"
+}
 
 # AWS Source Image
 source "amazon-ebs" "ubuntu" {
   ami_name      = "awsWebapp-{{timestamp}}"
-  instance_type = "t2.micro"
-  region        = "us-east-1"
+  instance_type = var.aws_instance_type
+  region        = var.aws_region
   ssh_username  = "ubuntu"
   profile       = "dev"
   source_ami_filter {
@@ -42,15 +82,15 @@ source "amazon-ebs" "ubuntu" {
 
 # GCP Source Image
 source "googlecompute" "ubuntu" {
-  project_id            = "webappdev-451818"
+  project_id            = var.gcp_project_id
   image_name            = "gcp-webapp-{{timestamp}}"
   source_image          = "ubuntu-2404-noble-amd64-v20250214"
   source_image_family   = "ubuntu-os-cloud"
-  machine_type          = "n1-standard-1"
-  zone                  = "us-central1-c"
+  machine_type          = var.gcp_machine_type
+  zone                  = var.gcp_zone
   ssh_username          = "ubuntu"
   disk_size             = 25
-  service_account_email = "webappserviceaccount@webappdev-451818.iam.gserviceaccount.com"
+  service_account_email = var.service_account_email
 }
 
 # Build Process
@@ -62,25 +102,25 @@ build {
 
   # Upload the setup script
   provisioner "file" {
-    source      = "scripts/setup_webapp.sh"
+    source      = var.setup_script_path
     destination = "/tmp/setup_webapp.sh"
   }
 
   # Upload the Webapp.zip file
   provisioner "file" {
-    source      = "Webapp.zip"
+    source      = var.webapp_zip_path
     destination = "/tmp/Webapp.zip"
   }
 
   # Upload the .env file manually for now
   provisioner "file" {
-    source      = ".env"
+    source      = var.env_file_path
     destination = "/tmp/.env"
   }
 
   # Upload the systemd file manually for now
   provisioner "file" {
-    source      = "systemd_webapp.service"
+    source      = var.systemd_service_path
     destination = "/tmp/systemd_webapp.service"
   }
 

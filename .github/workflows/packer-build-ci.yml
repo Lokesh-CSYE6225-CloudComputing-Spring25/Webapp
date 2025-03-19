@@ -83,4 +83,33 @@ jobs:
           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           export AWS_DEFAULT_REGION=us-east-1
-          packer build -var "aws_region=us-east-1" -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" .
+          packer build -var "aws_region=us-east-1" -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}"
+
+      - name: Pass the AMI to Demo in AWS
+        run: |
+          AMI_ID=$(jq -r '[.builds[] | select(.builder_type=="amazon-ebs")] | max_by(.build_time) | .artifact_id' image_manifest.json | cut -d':' -f2)
+
+          if [ -z "$AMI_ID" ] || [ "$AMI_ID" == "null" ]; then
+            echo "Error: AMI ID not found!"
+            exit 1
+          fi
+          
+          echo "AMI ID: $AMI_ID"
+          
+          TARGET_AWS_ACCOUNT="${{ secrets.AWS_DEMO_ACCOUNT_ID }}"
+          echo "Target AWS Account: $TARGET_AWS_ACCOUNT"
+
+          SNAPSHOT_ID=$(aws ec2 describe-images --image-ids $AMI_ID --query "Images[0].BlockDeviceMappings[0].Ebs.SnapshotId" --output text)
+          echo "Associated Snapshot ID: $SNAPSHOT_ID"
+
+          # Share AMI with DEMO account
+          aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=$TARGET_AWS_ACCOUNT}]"
+
+          # Share associated snapshot with DEMO account
+          aws ec2 modify-snapshot-attribute --snapshot-id $SNAPSHOT_ID --attribute createVolumePermission --operation-type add --user-ids $TARGET_AWS_ACCOUNT
+
+          # Verify AMI sharing
+          aws ec2 describe-image-attribute --image-id $AMI_ID --attribute launchPermission
+
+          # Verify snapshot sharing
+          aws ec2 describe-snapshot-attribute --snapshot-id $SNAPSHOT_ID --attribute createVolumePermission .

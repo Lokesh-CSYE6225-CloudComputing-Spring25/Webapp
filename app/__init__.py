@@ -16,13 +16,13 @@ def add_common_headers(response):
 
 def create_database():
     """ Ensure the database exists before creating tables. """
-    engine = create_engine(f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASS}@{Config.DB_HOST}/")
+    engine = create_engine(f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASS}@{Config.DB_HOST}/{Config.DB_NAME}")
     with engine.connect() as connection:
         existing_databases = connection.execute(text("SHOW DATABASES;"))
-        db_names = [row[0] for row in existing_databases]
-
-        if Config.DB_NAME not in db_names:
-            connection.execute(text(f"CREATE DATABASE {Config.DB_NAME};"))
+        # db_names = [row[0] for row in existing_databases]
+        #
+        # if Config.DB_NAME not in db_names:
+        #     connection.execute(text(f"CREATE DATABASE {Config.DB_NAME};"))
 
 def create_app():
     app = Flask(__name__)

@@ -5,12 +5,11 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 import pytest
-from app import create_app
+from app.routes import app  # ✅ Import app directly (avoid multiple initializations)
 
 @pytest.fixture
 def client():
     """Creates a test client for the Flask app"""
-    app = create_app()
     app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
@@ -34,4 +33,3 @@ def test_method_not_allowed(client):
     """Test if using POST on /healthz returns HTTP 405"""
     response = client.post("/healthz")
     assert response.status_code == 405
-

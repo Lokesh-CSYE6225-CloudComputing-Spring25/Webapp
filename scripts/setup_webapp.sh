@@ -17,12 +17,12 @@ fi
 export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # Ensure required variables are set
-if [[ -z "$DB_USER" || -z "$DB_PASS" || -z "$DB_HOST" || -z "$DB_NAME" || -z "$APP_USER" || -z "$APP_GROUP" || -z "$APP_DIR" ]]; then
-    echo "Error: One or more required environment variables are missing in .env file."
-    exit 1
-fi
+#if [[ -z "$DB_USER" || -z "$DB_PASS" || -z "$DB_HOST" || -z "$DB_NAME" || -z "$APP_USER" || -z "$APP_GROUP" || -z "$APP_DIR" ]]; then
+#    echo "Error: One or more required environment variables are missing in .env file."
+#    exit 1
+#fi
 
-echo "Using Database: $DB_NAME on Host: $DB_HOST with User: $DB_USER"
+#echo "Using Database: $DB_NAME on Host: $DB_HOST with User: $DB_USER"
 echo "Application Directory: $APP_DIR"
 echo "Running as Application User: $APP_USER"
 
@@ -43,46 +43,46 @@ apt update -y && apt upgrade -y
 # Install required packages
 echo "Installing required packages..."
 export DEBIAN_FRONTEND=noninteractive
-apt install -y mysql-server python3 python3-pip python3-venv unzip pkg-config libmysqlclient-dev nginx || { echo "Package installation failed"; exit 1; }
+apt install -y python3 python3-pip python3-venv unzip pkg-config || { echo "Package installation failed"; exit 1; }
 
 # Check if installations were successful
-check_package "mysql"
+#check_package "mysql"
 check_package "python3"
 check_package "pip3"
 check_package "unzip"
 
 #Start and enable nginx
-sudo systemctl enable nginx
-sudo systemctl start nginx
+#sudo systemctl enable nginx
+#sudo systemctl start nginx
 
 # Start and enable MySQL
-systemctl enable mysql && systemctl start mysql
+#systemctl enable mysql && systemctl start mysql
 
 # Change MySQL Root Authentication from auth_socket to mysql_native_password**
-echo "Changing MySQL root authentication method..."
-sudo mysql --user=root <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
-FLUSH PRIVILEGES;
-EOF
+#echo "Changing MySQL root authentication method..."
+#sudo mysql --user=root <<EOF
+#ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
+#FLUSH PRIVILEGES;
+#EOF
 
 # Verify root login with password
-if ! mysql -u root -p"$DB_PASS" -e "SELECT 1;" &> /dev/null; then
-    echo "Error: MySQL root password setup failed."
-    exit 1
-fi
-
-echo "MySQL root password has been successfully set."
-
-# Create the database user (Non-root user for security)
-echo "Creating new database user: $DB_USER..."
-sudo mysql -u root -p"$DB_PASS" -e "
-CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';
-GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'%';
-FLUSH PRIVILEGES;" || { echo "Failed to create database user"; exit 1; }
-
-# Create the database
-echo "Creating database: $DB_NAME..."
-sudo mysql -u root -p"$DB_PASS" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;" || { echo "Failed to create database"; exit 1; }
+#if ! mysql -u root -p"$DB_PASS" -e "SELECT 1;" &> /dev/null; then
+#    echo "Error: MySQL root password setup failed."
+#    exit 1
+#fi
+#
+#echo "MySQL root password has been successfully set."
+#
+## Create the database user (Non-root user for security)
+#echo "Creating new database user: $DB_USER..."
+#sudo mysql -u root -p"$DB_PASS" -e "
+#CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';
+#GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'%';
+#FLUSH PRIVILEGES;" || { echo "Failed to create database user"; exit 1; }
+#
+## Create the database
+#echo "Creating database: $DB_NAME..."
+#sudo mysql -u root -p"$DB_PASS" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;" || { echo "Failed to create database"; exit 1; }
 
 # Create group if it doesn't exist
 if ! getent group "$APP_GROUP" >/dev/null; then

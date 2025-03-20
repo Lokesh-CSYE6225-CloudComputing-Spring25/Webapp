@@ -8,17 +8,22 @@ import pytest
 from app import create_app
 from app.models import db  # Ensure SQLAlchemy is correctly initialized
 
-@pytest.fixture
-def client():
-    """Creates a test client for the Flask app"""
+@pytest.fixture(scope="module")  # Changed scope to module
+def app():
+    """Creates and configures a test Flask app."""
     app = create_app()
     app.config["TESTING"] = True
-
-    # Ensure the test client runs within the Flask app context
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"  # In-memory database
     with app.app_context():
-        db.create_all()  # Ensure tables exist for tests
-        with app.test_client() as client:
-            yield client
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
+
+@pytest.fixture
+def client(app):
+    """Creates a test client for the Flask app."""
+    return app.test_client()
 
 def test_health_check_success(client):
     """Test if /healthz endpoint returns HTTP 200"""

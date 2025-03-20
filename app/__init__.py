@@ -1,6 +1,6 @@
 # Flask app factory
 from flask import Flask, make_response
-from .routes import healthz,bucketz
+from .routes import app as flask_app  # Import the Flask instance from routes.py
 from .models import db
 from datetime import datetime, timezone
 from app.config import Config
@@ -25,7 +25,7 @@ def create_database():
         #     connection.execute(text(f"CREATE DATABASE {Config.DB_NAME};"))
 
 def create_app():
-    app = Flask(__name__)
+    app = flask_app  # Use the existing Flask app from routes.py
     app.config.from_object(Config)  # Load config settings from Config class
     db.init_app(app)  # Initialize the database
 
@@ -36,9 +36,6 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # Register Blueprint
-    app.register_blueprint(healthz)
-    app.register_blueprint(bucketz)
     # Global error handlers
     @app.errorhandler(404)
     def not_found(error=None):
@@ -56,5 +53,3 @@ def create_app():
         return add_common_headers(response)
 
     return app
-
-

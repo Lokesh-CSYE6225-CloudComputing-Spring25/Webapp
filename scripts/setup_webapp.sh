@@ -43,7 +43,7 @@ apt update -y && apt upgrade -y
 # Install required packages
 echo "Installing required packages..."
 export DEBIAN_FRONTEND=noninteractive
-apt install -y python3 python3-pip python3-venv unzip pkg-config || { echo "Package installation failed"; exit 1; }
+apt install -y python3 python3-pip python3-venv unzip pkg-config libmysqlclient-dev || { echo "Package installation failed"; exit 1; }
 
 # Check if installations were successful
 #check_package "mysql"

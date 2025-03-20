@@ -5,14 +5,20 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 import pytest
-from app.routes import app  # ✅ Import app directly (avoid multiple initializations)
+from app import create_app
+from app.models import db  # Ensure SQLAlchemy is correctly initialized
 
 @pytest.fixture
 def client():
     """Creates a test client for the Flask app"""
+    app = create_app()
     app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
+
+    # Ensure the test client runs within the Flask app context
+    with app.app_context():
+        db.create_all()  # Ensure tables exist for tests
+        with app.test_client() as client:
+            yield client
 
 def test_health_check_success(client):
     """Test if /healthz endpoint returns HTTP 200"""

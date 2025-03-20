@@ -1,4 +1,5 @@
 # Flask routes for API
+import os
 from flask import Blueprint, request, make_response, jsonify
 from .models import db, HealthCheck, FileMetadata
 from datetime import datetime, timezone

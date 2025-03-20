@@ -1,6 +1,6 @@
 # Flask routes for API
 import os
-from flask import Blueprint, request, make_response, jsonify
+from flask import Flask, request, make_response, jsonify
 from .models import db, HealthCheck, FileMetadata
 from datetime import datetime, timezone
 import boto3
@@ -8,9 +8,9 @@ from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
 
+# Initialize Flask App
+app = Flask(__name__)
 
-healthz = Blueprint("healthz", __name__)
-bucketz = Blueprint("bucketz", __name__)
 # Common headers for all responses
 def add_common_headers(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -20,7 +20,7 @@ def add_common_headers(response):
     response.headers["Content-Length"] = "0"  # Force empty body
     return response
 
-@healthz.route("/healthz", methods=["GET"])
+@app.route("/healthz", methods=["GET"])
 def check_health():
 
     #Reject query parameters**
@@ -48,19 +48,19 @@ def check_health():
         return add_common_headers(response)
 
 # Custom error handler for 405
-@healthz.errorhandler(405)
+@app.errorhandler(405)
 def method_not_allowed(error=None):
     response = make_response("", 405)
     return add_common_headers(response)
 
 # Custom error handler for 404
-@healthz.errorhandler(404)
+@app.errorhandler(404)
 def not_found(error=None):
     response = make_response("", 404)
     return add_common_headers(response)
 
 # Custom error handler for 500
-@healthz.errorhandler(500)
+@app.errorhandler(500)
 def internal_server_error(error=None):
     response = make_response("", 500)
     return add_common_headers(response)
@@ -72,7 +72,7 @@ BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
 
 # POST
-@bucketz.route('/v1/file', methods=['POST'])
+@app.route('/v1/file', methods=['POST'])
 def upload_file():
     if 'profilePic' not in request.files:
         return jsonify({"error": "No file provided"}), 400
@@ -101,7 +101,7 @@ def upload_file():
 
 
 # GET
-@bucketz.route('/v1/file/<string:file_id>', methods=['GET'])
+@app.route('/v1/file/<string:file_id>', methods=['GET'])
 def get_file_metadata(file_id):
     file_entry = FileMetadata.query.get(file_id)
 
@@ -117,7 +117,7 @@ def get_file_metadata(file_id):
 
 
 # DELETE
-@bucketz.route('/v1/file/<string:file_id>', methods=['DELETE'])
+@app.route('/v1/file/<string:file_id>', methods=['DELETE'])
 def delete_file(file_id):
     file_entry = FileMetadata.query.get(file_id)
 

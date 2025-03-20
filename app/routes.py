@@ -68,7 +68,7 @@ def internal_server_error(error=None):
 
 # S3 Configuration
 s3 = boto3.client('s3')
-BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+# os.getenv("S3_BUCKET_NAME") = os.getenv("S3_BUCKET_NAME")
 
 
 # POST
@@ -81,11 +81,12 @@ def upload_file():
     filename = secure_filename(file.filename)
     file_id = str(uuid.uuid4())  # Generate a unique file ID
     user_id = "default-user"  # Placeholder, update as needed (e.g., from request)
-    s3_key = f"{BUCKET_NAME}/{user_id}/{file_id}_{filename}"
+    s3_key = f"{os.getenv('S3_BUCKET_NAME')}/{user_id}/{file_id}_{filename}"
+
 
     # Upload file to S3
-    s3.upload_fileobj(file, BUCKET_NAME, s3_key)
-    s3_url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
+    s3.upload_fileobj(file, os.getenv("S3_BUCKET_NAME"), s3_key)
+    s3_url = f"https://{os.getenv('S3_BUCKET_NAME')}.s3.amazonaws.com/{s3_key}"
 
     # Save metadata to database
     new_file = FileMetadata(id=file_id, filename=filename, s3_key=s3_key, s3_url=s3_url, created_at=datetime.utcnow())
@@ -125,7 +126,7 @@ def delete_file(file_id):
         return jsonify({"error": "File not found"}), 404
 
     # Delete from S3
-    s3.delete_object(Bucket=BUCKET_NAME, Key=file_entry.s3_key)
+    s3.delete_object(Bucket=os.getenv("S3_BUCKET_NAME"), Key=file_entry.s3_key)
 
     # Delete metadata from database
     db.session.delete(file_entry)

@@ -44,19 +44,19 @@ jobs:
           aws configure set region us-east-1
 
       # 🔹 Authenticate GCP CLI using Service Account Key
-      # - name: Authenticate to GCP CLI
-      #   uses: google-github-actions/auth@v2
-      #   with:
-      #     credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
-      #     create_credentials_file: true
-      #     export_environment_variables: true
-
       - name: Authenticate to GCP CLI
-        run: |
-          echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > $HOME/gcp-key.json
-          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json
-          gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
-          gcloud auth list
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+          create_credentials_file: true
+          export_environment_variables: true
+
+      # - name: Authenticate to GCP CLI
+      #   run: |
+      #     echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > $HOME/gcp-key.json
+      #     export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json
+      #     gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
+      #     gcloud auth list
 
       - name: Setup Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2

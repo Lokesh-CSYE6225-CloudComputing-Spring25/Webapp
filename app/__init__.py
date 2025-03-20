@@ -1,6 +1,6 @@
 # Flask app factory
 from flask import Flask, make_response
-from .routes import healthz
+from .routes import healthz,bucketz
 from .models import db
 from datetime import datetime, timezone
 from app.config import Config
@@ -38,7 +38,7 @@ def create_app():
 
     # Register Blueprint
     app.register_blueprint(healthz)
-
+    app.register_blueprint(bucketz)
     # Global error handlers
     @app.errorhandler(404)
     def not_found(error=None):

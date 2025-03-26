@@ -103,7 +103,7 @@ build {
   # Upload CloudWatch Agent config
   provisioner "file" {
     source      = "cloudwatch-config.json"
-    destination = "/opt/csye6225/cloudwatch-config.json"
+    destination = "/tmp/cloudwatch-config.json"
   }
 
   # Upload the setup script

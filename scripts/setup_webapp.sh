@@ -164,25 +164,29 @@ sudo systemctl restart systemd_webapp
 sudo chown -R appuser:appgroup /opt/csye6225/
 
 # --------------------------------------------
-# Setup and Start CloudWatch Agent
+# Setup and Start CloudWatch Agent (AWS only)
 # --------------------------------------------
-echo "Installing CloudWatch Agent..."
+if grep -q "Amazon" /etc/os-release || { [ -f /sys/devices/virtual/dmi/id/board_vendor ] && grep -q "Amazon EC2" /sys/devices/virtual/dmi/id/board_vendor; }; then
+    echo "Detected AWS environment. Installing CloudWatch Agent..."
 
-sudo apt-get update -y
-sudo apt-get install -y amazon-cloudwatch-agent
+    sudo apt-get update -y
+    sudo apt-get install -y amazon-cloudwatch-agent
+    sudo mv /tmp/cloudwatch-config.json /opt/csye6225/cloudwatch-config.json
+    sudo chown root:root /opt/csye6225/cloudwatch-config.json
+    sudo chmod 644 /opt/csye6225/cloudwatch-config.json
 
-# Set permissions for CloudWatch config
-sudo chmod 644 /opt/csye6225/cloudwatch-config.json
-
-if [[ -f "/opt/csye6225/cloudwatch-config.json" ]]; then
-    echo "Starting CloudWatch Agent using /opt/csye6225/cloudwatch-config.json"
-    sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-        -a fetch-config \
-        -m ec2 \
-        -c file:/opt/csye6225/cloudwatch-config.json \
-        -s
+    if [[ -f "/opt/csye6225/cloudwatch-config.json" ]]; then
+        echo "Starting CloudWatch Agent using /opt/csye6225/cloudwatch-config.json"
+        sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+            -a fetch-config \
+            -m ec2 \
+            -c file:/opt/csye6225/cloudwatch-config.json \
+            -s
+    else
+        echo "Warning: CloudWatch config file not found at /opt/csye6225/cloudwatch-config.json. Skipping agent start."
+    fi
 else
-    echo "Warning: CloudWatch config file not found at /opt/csye6225/cloudwatch-config.json. Skipping agent start."
+    echo "Skipping CloudWatch Agent setup (Not an AWS environment)"
 fi
 
 echo "Setup completed successfully!"

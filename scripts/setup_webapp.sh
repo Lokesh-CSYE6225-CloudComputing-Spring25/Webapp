@@ -166,7 +166,7 @@ sudo chown -R appuser:appgroup /opt/csye6225/
 # --------------------------------------------
 # Setup and Start CloudWatch Agent (AWS only)
 # --------------------------------------------
-if grep -q "Amazon" /etc/os-release || { [ -f /sys/devices/virtual/dmi/id/board_vendor ] && grep -q "Amazon EC2" /sys/devices/virtual/dmi/id/board_vendor; }; then
+if curl --connect-timeout 1 -s http://169.254.169.254/latest/meta-data/instance-id &> /dev/null; then
     echo "Detected AWS environment. Installing CloudWatch Agent..."
 
     sudo apt-get update -y

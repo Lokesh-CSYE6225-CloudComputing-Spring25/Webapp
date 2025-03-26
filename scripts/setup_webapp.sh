@@ -169,8 +169,11 @@ sudo chown -R appuser:appgroup /opt/csye6225/
 if curl --connect-timeout 1 -s http://169.254.169.254/latest/meta-data/instance-id &> /dev/null; then
     echo "Detected AWS environment. Installing CloudWatch Agent..."
 
-    sudo apt-get update -y
-    sudo apt-get install -y amazon-cloudwatch-agent
+    #  Download and install CloudWatch agent manually (official method)
+    curl -O https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+    sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+    rm amazon-cloudwatch-agent.deb
+
     sudo mv /tmp/cloudwatch-config.json /opt/csye6225/cloudwatch-config.json
     sudo chown root:root /opt/csye6225/cloudwatch-config.json
     sudo chmod 644 /opt/csye6225/cloudwatch-config.json
@@ -188,6 +191,7 @@ if curl --connect-timeout 1 -s http://169.254.169.254/latest/meta-data/instance-
 else
     echo "Skipping CloudWatch Agent setup (Not an AWS environment)"
 fi
+
 
 echo "Setup completed successfully!"
 echo "To activate the virtual environment, run: source $APP_DIR/venv/bin/activate"

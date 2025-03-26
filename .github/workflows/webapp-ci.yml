@@ -53,6 +53,7 @@ jobs:
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
           echo "DATABASE_URL=mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "IS_TESTING=1" >> $GITHUB_ENV
 
       - name: Create `.env` File
         run: |
@@ -78,3 +79,9 @@ jobs:
         run: |
           source venv/bin/activate
           pytest -vv --capture=no tests/test_api.py
+
+      - name: Print Logs (for Debugging)
+        if: always()
+        run: |
+          echo "Log output from ./logs/webapp.log:"
+          cat ./logs/webapp.log || echo "Log file not found."

@@ -9,8 +9,8 @@ WorkingDirectory=/opt/csye6225/
 ExecStart=/opt/csye6225/venv/bin/python /opt/csye6225/run.py
 Restart=always
 RestartSec=5s
-StandardOutput=syslog
-StandardError=syslog
+StandardOutput=journal
+StandardError=journal
 SyslogIdentifier=csye6225-webapp
 
 [Install]

@@ -151,12 +151,39 @@ fi
 
 sudo cp /tmp/systemd_webapp.service /etc/systemd/system/systemd_webapp.service
 
+# Create log directory and set permissions
+sudo mkdir -p /var/log/csye6225
+sudo chown "$APP_USER":"$APP_GROUP" /var/log/csye6225
+sudo chmod 750 /var/log/csye6225
+
 sudo systemctl daemon-reload
 sudo systemctl enable systemd_webapp
 sudo systemctl start systemd_webapp
 sudo systemctl restart systemd_webapp
 
 sudo chown -R appuser:appgroup /opt/csye6225/
+
+# --------------------------------------------
+# Setup and Start CloudWatch Agent
+# --------------------------------------------
+echo "Installing CloudWatch Agent..."
+
+sudo apt-get update -y
+sudo apt-get install -y amazon-cloudwatch-agent
+
+# Set permissions for CloudWatch config
+sudo chmod 644 /opt/csye6225/cloudwatch-config.json
+
+if [[ -f "/opt/csye6225/cloudwatch-config.json" ]]; then
+    echo "Starting CloudWatch Agent using /opt/csye6225/cloudwatch-config.json"
+    sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+        -a fetch-config \
+        -m ec2 \
+        -c file:/opt/csye6225/cloudwatch-config.json \
+        -s
+else
+    echo "Warning: CloudWatch config file not found at /opt/csye6225/cloudwatch-config.json. Skipping agent start."
+fi
 
 echo "Setup completed successfully!"
 echo "To activate the virtual environment, run: source $APP_DIR/venv/bin/activate"

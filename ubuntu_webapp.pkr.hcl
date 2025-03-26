@@ -100,6 +100,12 @@ build {
     "source.googlecompute.ubuntu"
   ]
 
+  # Upload CloudWatch Agent config
+  provisioner "file" {
+    source      = "cloudwatch-config.json"
+    destination = "/opt/csye6225/cloudwatch-config.json"
+  }
+
   # Upload the setup script
   provisioner "file" {
     source      = var.setup_script_path

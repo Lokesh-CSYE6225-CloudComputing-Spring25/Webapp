@@ -5,6 +5,47 @@ from .models import db
 from datetime import datetime, timezone
 from app.config import Config
 from sqlalchemy import create_engine, text
+import os
+import logging
+import time
+from pythonjsonlogger.jsonlogger import JsonFormatter
+from logging.handlers import RotatingFileHandler
+from statsd import StatsClient
+
+IS_TESTING = os.getenv("IS_TESTING") == "1"
+
+if os.name == 'posix' and not IS_TESTING:
+    LOG_DIR = "/var/log/csye6225"
+else:
+    LOG_DIR = "./logs"
+
+LOG_FILE = os.path.join(LOG_DIR, "webapp.log")
+
+# Ensure the log directory exists
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Structured JSON Logging Setup
+class CustomJsonFormatter(JsonFormatter):
+    def add_fields(self, log_record, record, message_dict):
+        super(CustomJsonFormatter, self).add_fields(log_record, record, message_dict)
+        log_record['level'] = record.levelname
+        log_record['time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(record.created))
+
+formatter = CustomJsonFormatter()
+formatter.default_time_format = '%Y-%m-%dT%H:%M:%SZ'
+
+json_log_handler = RotatingFileHandler(LOG_FILE, maxBytes=5 * 1024 * 1024, backupCount=3)
+json_log_handler.setFormatter(formatter)
+
+logger = logging.getLogger("csye6225")
+logger.setLevel(logging.INFO)
+
+# Avoid duplicate log entries
+if not logger.handlers:
+    logger.addHandler(json_log_handler)
+
+# StatsD client for custom metrics
+statsd = StatsClient(host='localhost', port=8125, prefix='webapp')
 
 def add_common_headers(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -28,7 +69,7 @@ def create_app():
     app = flask_app  # Use the existing Flask app from routes.py
     app.config.from_object(Config)  # Load config settings from Config class
     db.init_app(app)  # Initialize the database
-
+    logger.info("Flask app initialized successfully.")
     # Ensure database exists before creating tables
     create_database()
 
@@ -39,16 +80,19 @@ def create_app():
     # Global error handlers
     @app.errorhandler(404)
     def not_found(error=None):
+        logger.warning("404 Not Found")
         response = make_response("", 404)
         return add_common_headers(response)
 
     @app.errorhandler(405)
     def method_not_allowed(error=None):
+        logger.warning("405 Method Not Allowed")
         response = make_response("", 405)
         return add_common_headers(response)
 
     @app.errorhandler(500)
     def internal_server_error(error=None):
+        logger.exception("Internal Server Error occurred")
         response = make_response("", 500)
         return add_common_headers(response)
 

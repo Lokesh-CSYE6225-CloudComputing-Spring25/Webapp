@@ -9,7 +9,7 @@ import boto3
 from werkzeug.utils import secure_filename
 import uuid
 from logging import getLogger
-from app import statsd
+from app.metrics import statsd
 
 logger = getLogger("csye6225")
 

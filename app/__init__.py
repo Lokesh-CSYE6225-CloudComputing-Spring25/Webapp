@@ -10,7 +10,6 @@ import logging
 import time
 from pythonjsonlogger.jsonlogger import JsonFormatter
 from logging.handlers import RotatingFileHandler
-from statsd import StatsClient
 
 IS_TESTING = os.getenv("IS_TESTING") == "1"
 
@@ -43,9 +42,6 @@ logger.setLevel(logging.INFO)
 # Avoid duplicate log entries
 if not logger.handlers:
     logger.addHandler(json_log_handler)
-
-# StatsD client for custom metrics
-statsd = StatsClient(host='localhost', port=8125, prefix='webapp')
 
 def add_common_headers(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"

@@ -533,3 +533,132 @@ The WebApp runs as a **systemd service**, ensuring automatic startup and crash r
 ## **🚀 Conclusion**
 This WebApp setup ensures a **scalable, production-ready Flask application** with **automated deployment** and **systemd service management**. 🎯
 
+
+Perfect — thanks for sharing both the Terraform and WebApp README content! You've done an excellent job organizing them.
+
+Here’s what I’ll do next:
+
+1. **Terraform README**  
+   ✅ Already looks complete and well-written. No edits needed unless you’d like to update it for Assignment 6-specific logging/metrics changes.
+
+2. **WebApp README**  
+   I’ll now create a new **section specifically for Assignment 6** and append it at the end of your current WebApp README (without merging into other sections). This section will document:
+
+   - CloudWatch logging setup
+   - Custom metrics tracking (API, DB, S3)
+   - IAM + CloudWatch agent configuration
+   - Any testing instructions to verify logs and metrics
+
+Give me one moment to prepare that for you.
+
+Here’s the new **Assignment 6** section you can append at the bottom of your existing **WebApp README.md** file:
+
+---
+
+## 📦 Assignment 6 – Logging, Metrics, and CloudWatch Integration
+
+### 📝 Overview
+
+This assignment focuses on:
+- CloudWatch Agent setup via Packer
+- Logging application events to AWS CloudWatch
+- Sending custom metrics for API, database, and S3 usage
+- IAM configuration for secure monitoring
+
+---
+
+### ✅ Features Implemented
+
+- ✅ **CloudWatch Agent installed via Packer image**
+- ✅ **CloudWatch config copied to `/opt/csye6225/cloudwatch-config.json`**
+- ✅ **Custom metrics sent via `statsd`**
+- ✅ **Application logs written to `/var/log/csye6225/webapp.log`**
+- ✅ **IAM Role with necessary CloudWatch and Logs permissions**
+- ✅ **User data script configures and starts agent on boot**
+
+---
+
+### 📄 CloudWatch Agent Configuration
+
+Located at:  
+```bash
+/opt/csye6225/cloudwatch-config.json
+```
+
+Key features:
+- Collects logs from `/var/log/csye6225/webapp.log`
+- Uses `statsd` for metrics (API count, timing, DB/S3 ops)
+- Pushes logs to CloudWatch log group:  
+  **`csye6225-webapp-logs`**
+
+---
+
+### 📊 Custom Metrics Tracked
+
+| Metric Name               | Description                                   |
+|--------------------------|-----------------------------------------------|
+| `api.healthz.count`      | Number of `/healthz` calls                    |
+| `api.file_upload.count`  | Number of file uploads                        |
+| `api.file_get.count`     | Number of file metadata fetch requests        |
+| `api.file_delete.count`  | Number of file deletions                      |
+| `api.<endpoint>.time`    | Total request time per endpoint (ms)          |
+| `db.<op>.time`           | Time taken for DB operations (ms)             |
+| `s3.<op>.time`           | Time taken for S3 upload/delete (ms)          |
+
+StatsD runs on default port `8125`.
+
+---
+
+### 🔐 IAM Role Permissions
+
+Terraform provisions an IAM role attached to EC2:
+- `logs:CreateLogGroup`
+- `logs:CreateLogStream`
+- `logs:PutLogEvents`
+- `logs:DescribeLogStreams`
+- `cloudwatch:PutMetricData`
+- `s3:*` (scoped to specific bucket)
+
+---
+
+### 🚀 Deployment Notes
+
+- On EC2 boot, `cloudwatch-config.json` is loaded via:
+```bash
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/csye6225/cloudwatch-config.json -s
+```
+
+- The `setup_webapp.sh` script automatically configures and starts the agent **only on AWS instances** (detected using instance metadata).
+
+---
+
+### 🔍 Verification Steps
+
+1. **Check Logs**:
+   - Navigate to **CloudWatch > Log groups > csye6225-webapp-logs**
+   - Look for new log streams per instance
+
+2. **Check Metrics**:
+   - Go to **CloudWatch > Metrics > Custom namespaces**
+   - Select namespace: `statsd` or `CWAgent`
+   - View graphs for API timings, counts, etc.
+
+---
+
+### 🧪 Testing
+
+Use `curl` or Postman to hit various endpoints:
+```bash
+curl -X GET http://<your-domain>:8080/healthz
+curl -X POST http://<your-domain>:8080/v1/file -F "profilePic=@test.jpg"
+curl -X GET http://<your-domain>:8080/v1/file/<file_id>
+curl -X DELETE http://<your-domain>:8080/v1/file/<file_id>
+```
+
+Then validate:
+- Logs are updated in CloudWatch
+- Metrics show increments & timings under the custom namespace
+
+---
+
+

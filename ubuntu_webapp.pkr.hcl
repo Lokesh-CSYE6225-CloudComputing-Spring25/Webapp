@@ -96,8 +96,7 @@ source "googlecompute" "ubuntu" {
 # Build Process
 build {
   sources = [
-    "source.amazon-ebs.ubuntu",
-    "source.googlecompute.ubuntu"
+    "source.amazon-ebs.ubuntu"
   ]
 
   # Upload CloudWatch Agent config

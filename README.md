@@ -660,5 +660,69 @@ Then validate:
 - Metrics show increments & timings under the custom namespace
 
 ---
+That's a **great point**, and you're totally right. In a README, especially for a **deployment assignment**, we don't need to paste full code blocks that already exist in the repo. Instead, we should **summarize what was implemented**, **mention where the logic lives**, and explain **what it does**, so anyone reading the README understands *what was done* without duplicating code.
 
+Here's a **clean, professional Assignment 08 section** for your **WebApp README** without redundant code:
+
+---
+
+## 🚀 Assignment 08 – Automated Deployment with GitHub Actions (Demo Environment)
+
+### 📝 Overview
+
+This assignment focuses on **automating deployment** of the WebApp to the **demo AWS environment** using GitHub Actions. It uses a Packer-generated AMI to refresh the EC2 instances in the Auto Scaling Group.
+
+---
+
+### ✅ What Was Implemented
+
+- A GitHub Actions workflow was updated to:
+  - Fetch the **latest AMI ID** from the current AWS account
+  - **Switch to the demo AWS account** using secure credentials from GitHub Secrets
+  - **Create a new Launch Template version** with the latest AMI
+  - **Set the new version as default**
+  - **Trigger an instance refresh** in the Auto Scaling Group
+  - **Wait for all instances** to be replaced successfully
+
+---
+
+### 📍 Workflow Location
+
+- File: `.github/workflows/ci.yml`
+- Trigger: On pushes/PRs to main (or manual if configured)
+- Accounts: Uses **`AWS_DEMO_ACCESS_KEY_ID`** and **`AWS_DEMO_SECRET_ACCESS_KEY`** for switching to the demo AWS environment
+
+---
+
+### 🔐 Required GitHub Secrets
+
+| Secret Name                 | Purpose                                           |
+|----------------------------|---------------------------------------------------|
+| `AWS_DEMO_ACCESS_KEY_ID`   | Access key for the demo AWS account              |
+| `AWS_DEMO_SECRET_ACCESS_KEY` | Secret key for the demo AWS account           |
+| `LAUNCH_TEMPLATE_NAME`     | EC2 Launch Template to update with new AMI       |
+| `Auto_Scaling_Group_Name`  | Auto Scaling Group to refresh after LT update    |
+
+---
+
+### 🧪 How to Test the Deployment
+
+1. Push code to the `main` branch or trigger the workflow manually.
+2. Monitor the GitHub Actions workflow execution.
+3. After successful run:
+   - New instances in the Auto Scaling Group will use the latest AMI.
+   - The WebApp will be automatically available at your `demo.<your-domain>` endpoint.
+
+---
+
+### 🔍 Verification
+
+- Confirm Launch Template default version is updated in AWS Console.
+- Check that new EC2 instances are launched with the latest AMI.
+- Use `/healthz` to ensure the app is running:
+  ```bash
+  curl https://demo.buildwithlokesh.me/healthz
+  ```
+
+---
 

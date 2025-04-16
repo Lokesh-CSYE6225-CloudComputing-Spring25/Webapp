@@ -53,6 +53,34 @@ def check_health():
     statsd.timing("api.healthz.time", int((time.time() - start_time) * 1000))
     return add_common_headers(response)
 
+@app.route("/cicd", methods=["GET"])
+def check_cicd():
+    start_time = time.time()
+    statsd.incr("api.cicd.count")
+
+    if request.args:
+        logger.warning("CICD check failed: unexpected query parameters")
+        return add_common_headers(make_response("", 400))
+
+    if request.data:
+        logger.warning("CICD check failed: unexpected request body")
+        return add_common_headers(make_response("", 400))
+
+    try:
+        db_start = time.time()
+        health_entry = HealthCheck()
+        db.session.add(health_entry)
+        db.session.commit()
+        statsd.timing("db.cicd.insert", int((time.time() - db_start) * 1000))
+        logger.info("CICD check passed and recorded to database")
+        response = make_response("", 200)
+    except Exception:
+        logger.error("CICD check failed:\n%s", traceback.format_exc())
+        response = make_response("", 503)
+
+    statsd.timing("api.cicd.time", int((time.time() - start_time) * 1000))
+    return add_common_headers(response)
+
 @app.errorhandler(405)
 def method_not_allowed(error=None):
     return add_common_headers(make_response("", 405))
